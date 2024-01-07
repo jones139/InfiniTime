@@ -57,6 +57,8 @@ void MotionService::Init() {
 
   res = ble_gatts_add_svcs(serviceDefinition);
   ASSERT(res == 0);
+
+  accBufIdx = 0;
 }
 
 int MotionService::OnStepCountRequested(uint16_t attributeHandle, ble_gatt_access_ctxt* context) {
@@ -95,8 +97,27 @@ void MotionService::OnNewMotionValues(int16_t x, int16_t y, int16_t z) {
   if (!motionValuesNoficationEnabled)
     return;
 
-  int16_t buffer[3] = {x, y, z};
-  auto* om = ble_hs_mbuf_from_flat(buffer, 3 * sizeof(int16_t));
+/*  accBuf++;
+  accBuf[0] = x;
+  accBuf++;
+  accBuf[0] = y;
+  accBuf++;
+  accBuf[0] = z;
+
+  if (accBuf.Idx() < accBufSize -1)
+    return;
+*/
+  // Once we have filled up accBuf, send a notificaton to subscribers that new data is ready.
+  int16_t buffer[accBufSize] = {};  
+  buffer[0] = x;
+  buffer[1] = y;
+  buffer[2] = z;
+  for (int i=0; i<accBufSize;i++) {
+    buffer[i] = accBufIdx;
+    accBufIdx ++;
+    if (accBufIdx > 32767) accBufIdx = 0;
+  }
+  auto* om = ble_hs_mbuf_from_flat(buffer, accBufSize * sizeof(int16_t));
 
   uint16_t connectionHandle = nimble.connHandle();
 

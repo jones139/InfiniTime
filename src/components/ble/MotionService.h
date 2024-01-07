@@ -6,6 +6,8 @@
 #undef max
 #undef min
 
+#include "utility/CircularBuffer.h"
+
 namespace Pinetime {
   namespace Controllers {
     class NimbleController;
@@ -33,6 +35,11 @@ namespace Pinetime {
       uint16_t motionValuesHandle;
       std::atomic_bool stepCountNoficationEnabled {false};
       std::atomic_bool motionValuesNoficationEnabled {false};
+
+      // A small buffer
+      static constexpr uint8_t accBufSize = 9; // The number of measurements to acquire before notifying subscribers of new data.
+      Utility::CircularBuffer<int16_t, accBufSize> accBuf = {};
+      uint16_t accBufIdx = 0;
     };
   }
 }
