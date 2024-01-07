@@ -58,7 +58,7 @@ void MotionService::Init() {
   res = ble_gatts_add_svcs(serviceDefinition);
   ASSERT(res == 0);
 
-  accBufIdx = 0;
+  testVal = 0;
 }
 
 int MotionService::OnStepCountRequested(uint16_t attributeHandle, ble_gatt_access_ctxt* context) {
@@ -69,9 +69,8 @@ int MotionService::OnStepCountRequested(uint16_t attributeHandle, ble_gatt_acces
     int res = os_mbuf_append(context->om, &buffer, 4);
     return (res == 0) ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
   } else if (attributeHandle == motionValuesHandle) {
-    int16_t buffer[3] = {motionController.X(), motionController.Y(), motionController.Z()};
-
-    int res = os_mbuf_append(context->om, buffer, 3 * sizeof(int16_t));
+    int res = os_mbuf_append(context->om, accBuf, accBufSize * sizeof(int16_t));
+    accBufIdx = 0;  // Re-start filling the buffer.
     return (res == 0) ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
   }
   return 0;
@@ -94,38 +93,38 @@ void MotionService::OnNewStepCountValue(uint32_t stepCount) {
 }
 
 void MotionService::OnNewMotionValues(int16_t x, int16_t y, int16_t z) {
+  // If the buffer is full, do not add any more to it (we lose data until it is read).
+  if (accBufIdx > accBufSize - 3)
+    return;
+
+  accBuf[accBufIdx] = x;
+  accBuf[accBufIdx] = testVal; //x;   FIXME
+  testVal++;
+  accBufIdx++;
+  accBuf[accBufIdx] = y;
+  accBuf[accBufIdx] = testVal; //y;   FIXME
+  testVal++;
+  accBufIdx++;
+  accBuf[accBufIdx] = z;
+  accBuf[accBufIdx] = testVal; //z;    FIXME
+  testVal++;
+  accBufIdx++;
+  if (testVal > 65532) testVal = 0;
+
+  // If the buffer is not full, just return after storing the data.
+  if (accBufIdx < accBufSize)
+    return;
+
+  // Once we have filled up accBuf, send a notificaton to subscribers that new data is ready, if we have any
+  // subscribers
   if (!motionValuesNoficationEnabled)
     return;
 
-/*  accBuf++;
-  accBuf[0] = x;
-  accBuf++;
-  accBuf[0] = y;
-  accBuf++;
-  accBuf[0] = z;
-
-  if (accBuf.Idx() < accBufSize -1)
-    return;
-*/
-  // Once we have filled up accBuf, send a notificaton to subscribers that new data is ready.
-  int16_t buffer[accBufSize] = {};  
-  buffer[0] = x;
-  buffer[1] = y;
-  buffer[2] = z;
-  for (int i=0; i<accBufSize;i++) {
-    buffer[i] = accBufIdx;
-    accBufIdx ++;
-    if (accBufIdx > 32767) accBufIdx = 0;
-  }
-  auto* om = ble_hs_mbuf_from_flat(buffer, accBufSize * sizeof(int16_t));
-
   uint16_t connectionHandle = nimble.connHandle();
-
   if (connectionHandle == 0 || connectionHandle == BLE_HS_CONN_HANDLE_NONE) {
     return;
   }
-
-  ble_gattc_notify_custom(connectionHandle, motionValuesHandle, om);
+  ble_gattc_notify(connectionHandle, motionValuesHandle);
 }
 
 void MotionService::SubscribeNotification(uint16_t attributeHandle) {

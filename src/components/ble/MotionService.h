@@ -38,8 +38,10 @@ namespace Pinetime {
 
       // A small buffer
       static constexpr uint8_t accBufSize = 9; // The number of measurements to acquire before notifying subscribers of new data.
-      Utility::CircularBuffer<int16_t, accBufSize> accBuf = {};
+      //Utility::CircularBuffer<int16_t, accBufSize> accBuf = {};
+      int16_t accBuf[accBufSize] = {};
       uint16_t accBufIdx = 0;
+      uint16_t testVal = 0;
     };
   }
 }
