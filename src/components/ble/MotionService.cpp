@@ -98,18 +98,18 @@ void MotionService::OnNewMotionValues(int16_t x, int16_t y, int16_t z) {
     return;
 
   accBuf[accBufIdx] = x;
-  accBuf[accBufIdx] = testVal; //x;   FIXME
+  //accBuf[accBufIdx] = testVal; //x;   FIXME
   testVal++;
   accBufIdx++;
   accBuf[accBufIdx] = y;
-  accBuf[accBufIdx] = testVal; //y;   FIXME
+  //accBuf[accBufIdx] = testVal; //y;   FIXME
   testVal++;
   accBufIdx++;
   accBuf[accBufIdx] = z;
-  accBuf[accBufIdx] = testVal; //z;    FIXME
-  testVal++;
+  //accBuf[accBufIdx] = testVal; //z;    FIXME
+  //testVal++;
   accBufIdx++;
-  if (testVal > 65532) testVal = 0;
+  //if (testVal > 65532) testVal = 0;
 
   // If the buffer is not full, just return after storing the data.
   if (accBufIdx < accBufSize)
