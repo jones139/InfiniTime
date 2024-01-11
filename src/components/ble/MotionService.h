@@ -28,6 +28,8 @@ namespace Pinetime {
 
       struct ble_gatt_chr_def characteristicDefinition[3];
       struct ble_gatt_svc_def serviceDefinition[2];
+      int16_t *data;
+      int16_t nData;
 
       uint16_t stepCountHandle;
       uint16_t motionValuesHandle;

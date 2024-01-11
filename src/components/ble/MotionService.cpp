@@ -60,16 +60,19 @@ void MotionService::Init() {
 }
 
 int MotionService::OnStepCountRequested(uint16_t attributeHandle, ble_gatt_access_ctxt* context) {
+  int res = 0;
   if (attributeHandle == stepCountHandle) {
     NRF_LOG_INFO("Motion-stepcount : handle = %d", stepCountHandle);
     uint32_t buffer = motionController.NbSteps();
 
-    int res = os_mbuf_append(context->om, &buffer, 4);
+    res = os_mbuf_append(context->om, &buffer, 4);
     return (res == 0) ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
   } else if (attributeHandle == motionValuesHandle) {
-    int16_t buffer[3] = {motionController.X(), motionController.Y(), motionController.Z()};
-
-    int res = os_mbuf_append(context->om, buffer, 3 * sizeof(int16_t));
+    if (this->nData < 3) {
+      res = os_mbuf_append(context->om, this->data, nData * 3 * sizeof(int16_t));
+    } else {
+      res = os_mbuf_append(context->om, this->data, 3 * 3 * sizeof(int16_t));
+    }
     return (res == 0) ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
   }
   return 0;
@@ -95,14 +98,17 @@ void MotionService::OnNewMotionValues(int16_t *fifo, uint16_t nFifo) {
   if (!motionValuesNoficationEnabled)
     return;
 
-  auto* om = ble_hs_mbuf_from_flat(fifo, 3 * nFifo * sizeof(int16_t));
+  //auto* om = ble_hs_mbuf_from_flat(fifo, 3 * nFifo * sizeof(int16_t));
+  this->data = fifo;
+  this->nData = nFifo;
 
   uint16_t connectionHandle = nimble.connHandle();
 
   if (connectionHandle == 0 || connectionHandle == BLE_HS_CONN_HANDLE_NONE) {
     return;
   }
-  ble_gattc_notify_custom(connectionHandle, motionValuesHandle, om);
+  //ble_gattc_notify_custom(connectionHandle, motionValuesHandle, om);
+  ble_gattc_notify(connectionHandle, motionValuesHandle);
 }
 
 void MotionService::SubscribeNotification(uint16_t attributeHandle) {

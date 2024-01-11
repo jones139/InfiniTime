@@ -94,8 +94,8 @@ void Bma421::Init() {
   fifo_frame.fifo_data_enable = BMA4_FIFO_A_ENABLE;
   fifo_frame.fifo_header_enable = 0;
 
-  accel_conf.odr = BMA4_OUTPUT_DATA_RATE_100HZ;
-  accel_conf.range = BMA4_ACCEL_RANGE_2G;
+  accel_conf.odr = BMA4_OUTPUT_DATA_RATE_25HZ;
+  accel_conf.range = BMA4_ACCEL_RANGE_4G;
   accel_conf.bandwidth = BMA4_ACCEL_NORMAL_AVG4;
   accel_conf.perf_mode = BMA4_CONTINUOUS_MODE;
   ret = bma4_set_accel_config(&accel_conf, &bma);
@@ -135,7 +135,7 @@ Bma421::Values Bma421::Process() {
   // Read entire FIFO into buffer fifo_frame
   bma4_read_fifo_data(&fifo_frame, &bma);
   // Decode FIFO frames in-place sequentially
-  uint16_t nFifo = 32; // Should be about 20 (200 Hz ODR / 10 Hz main loop)
+  uint16_t nFifo = 18; // Should be about 20 (200 Hz ODR / 10 Hz main loop)
   bma4_extract_accel((bma4_accel*) fifo, &nFifo, &fifo_frame, &bma);
 
     // Swap X and Y order because of the way the sensor is mounted in the PineTime
