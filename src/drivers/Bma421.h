@@ -11,9 +11,12 @@ namespace Pinetime {
 
       struct Values {
         uint32_t steps;
-        int16_t x;
-        int16_t y;
-        int16_t z;
+        //int16_t x;
+        //int16_t y;
+        //int16_t z;
+        int16_t *fifo;
+        uint16_t nFifo;
+
       };
 
       Bma421(TwiMaster& twiMaster, uint8_t twiAddress);

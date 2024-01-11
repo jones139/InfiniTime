@@ -91,19 +91,17 @@ void MotionService::OnNewStepCountValue(uint32_t stepCount) {
   ble_gattc_notify_custom(connectionHandle, stepCountHandle, om);
 }
 
-void MotionService::OnNewMotionValues(int16_t x, int16_t y, int16_t z) {
+void MotionService::OnNewMotionValues(int16_t *fifo, uint16_t nFifo) {
   if (!motionValuesNoficationEnabled)
     return;
 
-  int16_t buffer[3] = {x, y, z};
-  auto* om = ble_hs_mbuf_from_flat(buffer, 3 * sizeof(int16_t));
+  auto* om = ble_hs_mbuf_from_flat(fifo, 3 * nFifo * sizeof(int16_t));
 
   uint16_t connectionHandle = nimble.connHandle();
 
   if (connectionHandle == 0 || connectionHandle == BLE_HS_CONN_HANDLE_NONE) {
     return;
   }
-
   ble_gattc_notify_custom(connectionHandle, motionValuesHandle, om);
 }
 
